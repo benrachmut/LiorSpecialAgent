@@ -1,16 +1,27 @@
-# This is a sample Python script.
+from enums import Algorithm
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    dcop_type = DcopType.graph_coloring
+    algorithm = Algorithm.branch_and_bound
+    dcops = []
+    for i in range(repetitions):
+        dcops.append(create_selected_dcop(i,dcop_type,algorithm))
+    solve_dcops(dcops)
+    #create_data(dcops)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    while i < final_iteration:
+        up = False
+        for agent_id in agents.keys():
+            agent = get_agent(agents, agent_id)
+            agent.listen()
+        for agent_id in agents.keys():
+            agent = get_agent(agents, agent_id)
+            if agent.phase == 4:
+                data.update_data(agent.get_data())  # save data here
+                up = True
+            agent.reply()
+        if up:
+            i = i + 1
+    data.update_best_iteration_data()
+    # save_to_excel(id, data, "Simulation"+agent_type )
+    simulation_data.update_data(data, agent_type)

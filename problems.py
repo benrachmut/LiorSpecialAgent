@@ -2,12 +2,54 @@ import random
 import threading
 
 import Globals_
-from Algorithm_BnB import BranchAndBound
 from Agents import *
 from Globals_ import *
 
 from enums import *
 from abc import ABC, abstractmethod
+
+
+
+repetitions = 1
+incomplete_iterations = 1000
+
+
+#### DCOPS_INPUT ####
+
+#*******************************************#
+# dcop_type = DcopType.sparse_random_uniform
+#*******************************************#
+
+sparse_p1 = 0.2
+sparse_p2 = 1
+sparse_min_cost = 1
+sparse_max_cost = 100
+
+
+
+def sparse_random_uniform_cost_function(rnd_cost:Random,a1,a2,d_a1,d_a2):
+    if rnd_cost.random()<sparse_p2:
+        return rnd_cost.randint(sparse_min_cost, sparse_max_cost)
+    else:
+        return 0
+
+
+# *******************************************#
+# dcop_type = DcopType.dense_random_uniform
+# *******************************************#
+
+dense_p1 = 0.7
+dense_p2 = 1
+dense_min_cost = 1
+dense_max_cost = 100
+
+def dense_random_uniform_cost_function(rnd_cost:Random,a1,a2,d_a1,d_a2):
+    if rnd_cost.random()<dense_p2:
+        return rnd_cost.randint(sparse_min_cost, sparse_max_cost)
+    else:
+        return 0
+
+
 
 
 class AgentPair():
@@ -163,12 +205,12 @@ class Mailer():
         return msgs_by_receiver_dict
 
 class DCOP(ABC):
-    def __init__(self,id_,A,D,dcop_name,algorithm):
+    def __init__(self,id_,A,D,dcop_name,algorithm,percent_special_agent = 0.02):
         self.dcop_id = id_
         self.A = A
         self.D = D
         self.algorithm = algorithm
-
+        self.percent_special_agent = percent_special_agent
         self.dcop_name = dcop_name
         self.agents = []
         self.create_agents()
@@ -182,18 +224,41 @@ class DCOP(ABC):
         self.inform_root()
         self.records_dcop = {}
 
+    def get_agent(self, is_special,i):
+        if is_special:
+            if self.algorithm == Algorithm.PC_Simple or self.algorithm == Algorithm.Egoist_Simple or  self.algorithm == Algorithm.Altruist_Simple:
+                return SimpleAgent(i,self.D)
+            if self.algorithm == Algorithm.PC_Careful or self.algorithm == Algorithm.Egoist_Careful or self.algorithm == Algorithm.Altruist_Careful:
+                return CarefulAgent(i,self.D)
+            if self.algorithm == Algorithm.PC_Generous or self.algorithm == Algorithm.Egoist_Generous or self.algorithm == Algorithm.Altruist_Generous:
+                return GenerousAgent(i,self.D)
+            if self.algorithm == Algorithm.PC_Selfish or self.algorithm == Algorithm.Egoist_Selfish or self.algorithm == Algorithm.Altruist_Selfish:
+                return SelfishAgent(i,self.D)
+            if self.algorithm == Algorithm.PC_Random or self.algorithm == Algorithm.Egoist_Random or self.algorithm == Algorithm.Altruist_Random:
+                return RandomAgent(i,self.D)
+            if self.algorithm == Algorithm.PC_Egoist or self.algorithm == Algorithm.Egoist_Egoist or self.algorithm == Algorithm.Altruist_Egoist:
+                return EgoistAgent(i,self.D)
+            if self.algorithm == Algorithm.PC_Altruist or self.algorithm == Algorithm.Egoist_Altruist or self.algorithm == Algorithm.Altruist_Altruist:
+                return AltruistAgent(i,self.D)
+
+        else:
+            if self.algorithm == Algorithm.PC_Simple or self.algorithm == Algorithm.PC_Careful or self.algorithm == Algorithm.PC_Generous or self.algorithm == Algorithm.PC_Selfish or self.algorithm == Algorithm.PC_Random or self.algorithm == Algorithm.PC_Egoist or self.algorithm == Algorithm.PC_Altruist :
+                return SMagent(i,self.D)
+
+            if self.algorithm == Algorithm.Egoist_Simple or self.algorithm == Algorithm.Egoist_Careful or self.algorithm == Algorithm.Egoist_Generous or self.algorithm == Algorithm.Egoist_Selfish or self.algorithm == Algorithm.Egoist_Random or self.algorithm == Algorithm.Egoist_Egoist or self.algorithm == Algorithm.Egoist_Altruist:
+                return EgoistAgent(i,self.D)
+
+            if self.algorithm == Algorithm.Altruist_Simple or self.algorithm == Algorithm.Altruist_Careful or self.algorithm == Algorithm.Altruist_Generous or self.algorithm == Algorithm.Altruist_Selfish or self.algorithm == Algorithm.Altruist_Random or self.algorithm == Algorithm.Altruist_Egoist or self.algorithm == Algorithm.Altruist_Altruist:
+                return AltruistAgent(i,self.D)
 
     def create_agents(self):
-        for i in range(self.A):
-            if self.algorithm == Algorithm.branch_and_bound:
-                self.agents.append(BranchAndBound(i + 1, self.D))
+        for i in range(1,self.A+1):
+            is_special = (i/self.A)<self.percent_special_agent
+            self.agents.append(self.get_agent(is_special,i))
 
 
 
 
-    def most_dense_agent(self):
-        sorted_agents = sorted(self.agents, key=lambda x: (-len(x.neighbors_obj), x.id_))
-        return sorted_agents[0]
 
 
     def connect_agents_to_neighbors(self):
@@ -273,8 +338,6 @@ class DCOP(ABC):
                         ans[k]=[]
                     ans[k].append(v)
         return ans
-
-
 
 
 
